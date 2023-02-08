@@ -6,9 +6,9 @@ namespace SP23.P02.Web.Features.UserRoles
 {
     public class UserRole : IdentityUserRole<int>
     {
-        public List<Role>? Roles { get; set; }
+        public List<Role>? Role { get; set; }
 
 
-        public List<User>? Users { get; set; }
+        public List<User>? User{ get; set; }
     }
 }
