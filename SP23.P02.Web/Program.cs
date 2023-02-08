@@ -16,9 +16,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Trouble with AddDefaultIdentity?
-/*builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<DataContext>();*/
+builder.Services.AddIdentity<User, Role>().AddEntityFrameworkStores<DataContext>();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     // Password settings.
