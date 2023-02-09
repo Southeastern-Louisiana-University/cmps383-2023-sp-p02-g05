@@ -22,22 +22,22 @@ public class DataContext : IdentityDbContext<User, Role, int, IdentityUserClaim<
     public DbSet<User> User { get; set; }
     public DbSet<Role> Role { get; set; }
     public DbSet<UserRole> UserRole { get; set; }
-    //protected override void OnModelCreating(ModelBuilder modelBuilder)
-    //{
-    //    base.OnModelCreating(modelBuilder);
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-    //    var userRoleBuilder = modelBuilder.Entity<UserRole>();
+        var userRoleBuilder = modelBuilder.Entity<UserRole>();
 
-    //    userRoleBuilder.HasKey(x => new { x.UserId, x.RoleId });
+        userRoleBuilder.HasKey(x => new { x.UserId, x.RoleId });
 
-    //    userRoleBuilder.HasOne(x => x.Role)
-    //        .WithMany(x => x.Users)
-    //        .HasForeignKey(x => x.RoleId);
+        userRoleBuilder.HasOne(x => x.Role)
+            .WithMany(x => x.Users)
+            .HasForeignKey(x => x.RoleId);
 
-    //    userRoleBuilder.HasOne(x => x.User)
-    //        .WithMany(x => x.Roles)
-    //        .HasForeignKey(x => x.UserId);
+        userRoleBuilder.HasOne(x => x.User)
+            .WithMany(x => x.Roles)
+            .HasForeignKey(x => x.UserId);
 
-    //    modelBuilder.ApplyConfigurationsFromAssembly(typeof(DataContext).Assembly);
-    //}
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DataContext).Assembly);
+    }
 }
