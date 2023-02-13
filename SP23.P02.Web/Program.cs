@@ -61,6 +61,10 @@ using (var scope = app.Services.CreateScope())
     {
         Name = "Admin",
     });
+    await roleManager.CreateAsync(new Role
+    {
+        Name = "User"
+    });
 
     var userManager= scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     await userManager.CreateAsync(new User
