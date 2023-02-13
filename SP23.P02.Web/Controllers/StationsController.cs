@@ -43,7 +43,8 @@ public class StationsController : ControllerBase
         if (IsInvalid(dto))
         {
             return BadRequest();
-        }
+        } 
+
 
         var station = new TrainStation
         {

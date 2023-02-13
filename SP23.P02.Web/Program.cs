@@ -55,6 +55,25 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DataContext>();
     await SeedHelper.MigrateAndSeed(db);
+
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+    await roleManager.CreateAsync(new Role
+    {
+        Name = "Admin",
+    });
+
+    var userManager= scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    await userManager.CreateAsync(new User
+    {
+        UserName = "bob"
+       
+    },"Password123");
+
+    var signInManager =scope.ServiceProvider.GetRequiredService<SignInManager<User>>();
+  
+       
+
+   
 }
 
 // Configure the HTTP request pipeline.
