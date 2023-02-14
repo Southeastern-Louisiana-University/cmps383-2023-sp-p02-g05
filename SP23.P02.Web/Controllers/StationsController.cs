@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SP23.P02.Web.Data;
 using SP23.P02.Web.Features.TrainStations;
@@ -38,17 +39,23 @@ public class StationsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public ActionResult<TrainStationDto> CreateStation(TrainStationDto dto)
     {
         if (IsInvalid(dto))
         {
             return BadRequest();
         }
-
+        var manager = dataContext.User.FirstOrDefault(x => x.Id == dto.ManagerId);
+        if (manager == null)
+        {
+            return BadRequest("The user you were going to put as a manager doesn't exist.");
+        }
         var station = new TrainStation
         {
             Name = dto.Name,
             Address = dto.Address,
+            Manager = manager
         };
         stations.Add(station);
 
@@ -73,6 +80,7 @@ public class StationsController : ControllerBase
         {
             return NotFound();
         }
+        
 
         station.Name = dto.Name;
         station.Address = dto.Address;
@@ -116,6 +124,7 @@ public class StationsController : ControllerBase
                 Id = x.Id,
                 Name = x.Name,
                 Address = x.Address,
+                ManagerId = x.Manager.Id
             });
     }
 }
