@@ -5,7 +5,7 @@ namespace SP23.P02.Web.Features.Users
 {
     public class User : IdentityUser<int>
     {
-        public ICollection<UserRole>? Roles { get; set; }
+        public virtual ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
 
     }
 }
