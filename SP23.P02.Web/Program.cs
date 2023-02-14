@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SP23.P02.Web.Data;
+using SP23.P02.Web.Features.DTOs;
 using SP23.P02.Web.Features.Roles;
 using SP23.P02.Web.Features.Users;
 
@@ -53,27 +56,14 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var services = scope.ServiceProvider;
     var db = scope.ServiceProvider.GetRequiredService<DataContext>();
     await SeedHelper.MigrateAndSeed(db);
+    await Seed.Initialize(services);
 
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-    await roleManager.CreateAsync(new Role
-    {
-        Name = "Admin",
-    });
 
-    var userManager= scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-    await userManager.CreateAsync(new User
-    {
-        UserName = "bob"
-       
-    },"Password123");
 
-    var signInManager =scope.ServiceProvider.GetRequiredService<SignInManager<User>>();
-  
-       
 
-   
 }
 
 // Configure the HTTP request pipeline.

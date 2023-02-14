@@ -1,41 +1,75 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SP23.P02.Web.Data;
+using SP23.P02.Web.Extensions;
 using SP23.P02.Web.Features.DTOs;
 using SP23.P02.Web.Features.Users;
 
 namespace SP23.P02.Web.Controllers;
 
-[Route("api/authentication")]
 [ApiController]
-
+[Route("api/authentication")]
 public class AuthenticationController : ControllerBase
-
 {
-    private SignInManager<User> _signInManager;
-    private UserManager<User> _userManager;
-    private readonly DataContext dataContext;
+    private readonly SignInManager<User> signInManager;
+    private readonly UserManager<User> userManager;
 
-    public AuthenticationController(UserManager<User> userManager, SignInManager<User> signInManager, DataContext dataContext)
+    public AuthenticationController(
+        SignInManager<User> signInManager,
+        UserManager<User> userManager)
     {
-        this.dataContext = dataContext;
-        _signInManager = signInManager;
-        _userManager = userManager;
+        this.signInManager = signInManager;
+        this.userManager = userManager;
     }
-   
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> Me()
+    {
+        var username = User.GetCurrentUserName();
+        var resultDto = await GetUserDto(userManager.Users).SingleAsync(x => x.UserName == username);
+        return Ok(resultDto);
+    }
+
+    
+
     [HttpPost("login")]
-    public async Task<ActionResult<UserDto>> Login(LoginDto users)
+    public async Task<ActionResult<UserDto>> Login(LoginDto dto)
     {
-        var userFound = await _userManager.FindByNameAsync(users.UserName);
-        var isPassWordValid = await _userManager.ChangePasswordAsync(userFound, users.Password);
-
-        if (isPassWordValid && userFound != null)
+        var user = await userManager.FindByNameAsync(dto.UserName);
+        if (user == null)
         {
-            await _signInManager.SignInAsync(userFound,false);
-                return Ok(dataContext.Users.Select(x => new { x.UserName, }));
+            return BadRequest();
         }
+        var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, true);
+        if (!result.Succeeded)
+        {
+            return BadRequest();
+        }
+
+        await signInManager.SignInAsync(user, false);
+
+        var resultDto = await GetUserDto(userManager.Users).SingleAsync(x => x.UserName == user.UserName);
+        return Ok(resultDto);
     }
-    
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult> Logout()
+    {
+        await signInManager.SignOutAsync();
+        return Ok();
     }
-    
+
+    private static IQueryable<UserDto> GetUserDto(IQueryable<User> users)
+    {
+        return users.Select(x => new UserDto
+        {
+            Id = x.Id,
+            UserName = x.UserName,
+            Roles = x.Roles.Select(y => y.Role!.Name).ToArray()
+        });
+    }
+}
