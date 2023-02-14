@@ -67,6 +67,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = "Admin")]
     [Route("{id}")]
     public ActionResult<TrainStationDto> UpdateStation(int id, TrainStationDto dto)
     {
@@ -74,7 +75,11 @@ public class StationsController : ControllerBase
         {
             return BadRequest();
         }
-
+        var manager = dataContext.User.FirstOrDefault(x => x.Id == dto.ManagerId);
+        if (manager == null)
+        {
+            return BadRequest("The user you were going to put as a manager doesn't exist.");
+        }
         var station = stations.FirstOrDefault(x => x.Id == id);
         if (station == null)
         {
@@ -84,6 +89,7 @@ public class StationsController : ControllerBase
 
         station.Name = dto.Name;
         station.Address = dto.Address;
+        station.Manager = manager;
 
         dataContext.SaveChanges();
 
@@ -93,6 +99,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpDelete]
+    [Authorize(Roles = "Admin")]
     [Route("{id}")]
     public ActionResult DeleteStation(int id)
     {
