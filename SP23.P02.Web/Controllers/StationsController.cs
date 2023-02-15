@@ -1,8 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SP23.P02.Web.Data;
+using SP23.P02.Web.Extensions;
+using SP23.P02.Web.Features.DTOs;
 using SP23.P02.Web.Features.TrainStations;
+using SP23.P02.Web.Features.Users;
 
 namespace SP23.P02.Web.Controllers;
 
@@ -13,10 +18,18 @@ public class StationsController : ControllerBase
     private readonly DbSet<TrainStation> stations;
     private readonly DataContext dataContext;
 
-    public StationsController(DataContext dataContext)
+    private readonly SignInManager<User> signInManager;
+    private readonly UserManager<User> userManager;
+
+
+    public StationsController(DataContext dataContext, SignInManager<User> signInManager,
+        UserManager<User> userManager)
     {
         this.dataContext = dataContext;
         stations = dataContext.Set<TrainStation>();
+
+        this.signInManager = signInManager;
+        this.userManager = userManager;
     }
 
     [HttpGet]
@@ -47,9 +60,12 @@ public class StationsController : ControllerBase
             return BadRequest();
         }
         var manager = dataContext.User.FirstOrDefault(x => x.Id == dto.ManagerId);
-        if (manager == null)
+        if (!string.IsNullOrEmpty(dto.ManagerId.ToString())) //manager is optional, so if ManagerId was not left blank intentionally?
         {
-            return BadRequest("The user you were going to put as a manager doesn't exist.");
+            if (manager == null)
+            {
+                return BadRequest("The user you were going to put as a manager doesn't exist.");
+            }
         }
         var station = new TrainStation
         {
@@ -76,20 +92,33 @@ public class StationsController : ControllerBase
             return BadRequest();
         }
         var manager = dataContext.User.FirstOrDefault(x => x.Id == dto.ManagerId);
-        if (manager == null)
+        if (!string.IsNullOrEmpty(dto.ManagerId.ToString()))
         {
-            return BadRequest("The user you were going to put as a manager doesn't exist.");
+            if (manager == null)
+            {
+                return BadRequest("The user you were going to put as a manager doesn't exist.");
+            }
         }
+
         var station = stations.FirstOrDefault(x => x.Id == id);
         if (station == null)
         {
             return NotFound();
         }
-        
+
+        var username = User.GetCurrentUserName(); //possibly dumb code begins here
+        var user = dataContext.User.FirstOrDefault(x => x.UserName == username);
 
         station.Name = dto.Name;
         station.Address = dto.Address;
-        station.Manager = manager;
+        if (User.IsInRole("Admin")) 
+        {
+            station.Manager = manager;
+        }
+        else
+        {
+            return BadRequest("Only admins can edit the manager");
+        }
 
         dataContext.SaveChanges();
 
