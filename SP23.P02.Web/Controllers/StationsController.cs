@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using SP23.P02.Web.Data;
 using SP23.P02.Web.Extensions;
 using SP23.P02.Web.Features.DTOs;
+using SP23.P02.Web.Features.Roles;
 using SP23.P02.Web.Features.TrainStations;
 using SP23.P02.Web.Features.Users;
 
@@ -52,7 +53,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = RoleNames.Admin)] //Roles = Admin
     public ActionResult<TrainStationDto> CreateStation(TrainStationDto dto)
     {
         if (IsInvalid(dto))
@@ -83,9 +84,9 @@ public class StationsController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Roles = "Admin")]
+    [Authorize] //Roles = Admin
     [Route("{id}")]
-    public ActionResult<TrainStationDto> UpdateStation(int id, TrainStationDto dto)
+    public ActionResult<TrainStationDto> UpdateStation(int id, TrainStationDto dto) //wasn't async Task before
     {
         if (IsInvalid(dto))
         {
@@ -111,14 +112,16 @@ public class StationsController : ControllerBase
 
         station.Name = dto.Name;
         station.Address = dto.Address;
-        if (User.IsInRole("Admin")) 
+        if (!User.IsInRole(RoleNames.Admin) && station.Manager.Id != User.GetCurrentUserId()) //User.IsInRole("Admin"), await userManager.IsInRoleAsync(user, "Admin")
         {
-            station.Manager = manager;
+            return Forbid();
         }
         else
         {
-            return BadRequest("Only admins can edit the manager");
+            station.Manager = manager;
         }
+       
+        
 
         dataContext.SaveChanges();
 
@@ -128,7 +131,7 @@ public class StationsController : ControllerBase
     }
 
     [HttpDelete]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = RoleNames.Admin)]
     [Route("{id}")]
     public ActionResult DeleteStation(int id)
     {
